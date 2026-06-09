@@ -4,13 +4,20 @@ import { NextResponse } from "next/server";
 // chegaram ao runtime. Remover após resolver o deploy.
 export const runtime = "edge";
 
+function stripControlChars(s: string): string {
+  let out = "";
+  for (const ch of s) if (ch.charCodeAt(0) >= 32) out += ch;
+  return out;
+}
+
 export async function GET() {
-  const raw = process.env.AUTH_USERS_JSON;
+  const raw = process.env.AUTH_USERS_JSON ?? "";
+  const cleaned = stripControlChars(raw);
   let users: Array<{ login?: string }> = [];
   let jsonValid = false;
   let parseError: string | null = null;
   try {
-    const p = JSON.parse(raw ?? "[]");
+    const p = JSON.parse(cleaned);
     if (Array.isArray(p)) {
       users = p;
       jsonValid = true;
@@ -20,7 +27,9 @@ export async function GET() {
   }
   const secret = process.env.AUTH_JWT_SECRET;
   return NextResponse.json({
-    authUsersJsonLen: raw ? raw.length : 0,
+    rawLen: raw.length,
+    cleanedLen: cleaned.length,
+    controlCharsRemoved: raw.length - cleaned.length,
     jsonValid,
     parseError,
     usersCount: users.length,

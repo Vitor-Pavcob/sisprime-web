@@ -21,11 +21,19 @@ export const COOKIE_NAME = "sisprime_session";
 const SESSION_SHORT = 60 * 60 * 8;        // 8h
 const SESSION_LONG = 60 * 60 * 24 * 30;   // 30 dias com "lembrar"
 
+/** Remove caracteres de controle (code < 32) que podem ser injetados ao colar
+ *  a variável no painel do host (quebras de linha/tab) e invalidam o JSON. */
+function stripControlChars(s: string): string {
+  let out = "";
+  for (const ch of s) if (ch.charCodeAt(0) >= 32) out += ch;
+  return out;
+}
+
 function getUsersFromEnv(): StoredUser[] {
   const raw = process.env.AUTH_USERS_JSON;
   if (!raw) return [];
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(stripControlChars(raw));
     return Array.isArray(parsed) ? (parsed as StoredUser[]) : [];
   } catch {
     return [];
@@ -33,7 +41,7 @@ function getUsersFromEnv(): StoredUser[] {
 }
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.AUTH_JWT_SECRET;
+  const secret = (process.env.AUTH_JWT_SECRET ?? "").trim();
   if (!secret || secret.length < 32) {
     throw new Error(
       "AUTH_JWT_SECRET ausente ou curto (>= 32 chars). Configure no .env.local (dev) ou nas env vars do host."
