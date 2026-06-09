@@ -35,6 +35,12 @@ const ResultadoIcon = (
   </svg>
 );
 
+const UsuariosIcon = (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
 const NAV = [
   { href: "/ativas", label: "Ações Ativas", icon: AtivasIcon },
   { href: "/passivas", label: "Ações Passivas", icon: PassivasIcon },
@@ -47,6 +53,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [hover, setHover] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [isMaster, setIsMaster] = useState(false);
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const expanded = hover;
 
@@ -56,6 +63,15 @@ export function Sidebar() {
     document.addEventListener("fullscreenchange", onChange);
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setIsMaster(d?.user?.role === "master"))
+      .catch(() => {});
+  }, []);
+
+  const navItems = isMaster ? [...NAV, { href: "/usuarios", label: "Usuários", icon: UsuariosIcon }] : NAV;
 
   const onEnter = () => {
     if (leaveTimer.current) clearTimeout(leaveTimer.current);
@@ -104,7 +120,7 @@ export function Sidebar() {
       {/* Navegação */}
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <ul className="flex flex-col gap-1">
-          {NAV.map((item) => {
+          {navItems.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
               <li key={item.href}>

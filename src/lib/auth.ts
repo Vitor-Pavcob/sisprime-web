@@ -1,29 +1,37 @@
 /**
  * Autenticação edge-compatible (middleware + route handlers).
- * Web Crypto (PBKDF2) + jose (JWT). Sem perfis/escopos: todo usuário logado
- * vê todas as telas.
+ * Web Crypto (PBKDF2) + jose (JWT). Role simples: "master" (gerencia usuários)
+ * ou "user" (acesso às telas). Todo logado vê as 5 telas; só master administra.
  *
- * Usuários: env `AUTH_USERS_JSON` (lista JSON). Segredo do JWT: `AUTH_JWT_SECRET`
- * (>= 32 chars). Gere ambos com `node scripts/auth-bootstrap.mjs`.
+ * Storage de usuários: Cloudflare KV (fonte de verdade quando configurado), com
+ * seed/fallback em `AUTH_USERS_JSON`. Segredo do JWT: `AUTH_JWT_SECRET`.
+ * Gere a seed com `node scripts/auth-bootstrap.mjs`.
  */
 import { jwtVerify, SignJWT } from "jose";
+import { isKvConfigured, kvGetJson, kvPutJson } from "./kv";
+
+export type Role = "master" | "user";
 
 export type StoredUser = {
   login: string;
   nome?: string;
   salt: string; // hex
   hash: string; // hex (PBKDF2-SHA256, 100k)
+  role?: Role;  // ausente = "user"
 };
 
-export type SessionUser = { login: string; nome?: string };
+export type SessionUser = { login: string; nome?: string; role: Role };
 
 export const COOKIE_NAME = "sisprime_session";
+const KV_USERS_KEY = "users";
 const SESSION_SHORT = 60 * 60 * 8;        // 8h
 const SESSION_LONG = 60 * 60 * 24 * 30;   // 30 dias com "lembrar"
 
+const roleOf = (u: StoredUser): Role => (u.role === "master" ? "master" : "user");
+
 /** Remove TODO espaço em branco (espaços, quebras de linha, tabs) que podem ser
- *  injetados ao colar a variável no painel do host e invalidam/corrompem o JSON.
- *  Seguro aqui: o JSON é compacto e nenhum valor (login/salt/hash) tem espaço. */
+ *  injetados ao colar a variável no painel do host e corrompem o JSON.
+ *  Seguro: o JSON é compacto e nenhum valor (login/salt/hash) tem espaço. */
 function stripWhitespace(s: string): string {
   let out = "";
   for (const ch of s) if (ch.charCodeAt(0) > 32) out += ch;
@@ -41,12 +49,28 @@ function getUsersFromEnv(): StoredUser[] {
   }
 }
 
+// ---- Storage: KV (fonte de verdade) com seed do env ----
+export async function listUsers(): Promise<StoredUser[]> {
+  if (!isKvConfigured()) return getUsersFromEnv();
+  const fromKv = await kvGetJson<StoredUser[]>(KV_USERS_KEY);
+  if (fromKv != null) return fromKv;
+  // Primeira leitura sem dados no KV → migra a seed do env pro KV.
+  const seed = getUsersFromEnv();
+  if (seed.length > 0) await kvPutJson(KV_USERS_KEY, seed);
+  return seed;
+}
+
+export async function saveUsers(users: StoredUser[]): Promise<void> {
+  if (!isKvConfigured()) {
+    throw new Error("KV não configurado — defina CF_ACCOUNT_ID, CF_KV_NAMESPACE_ID e CF_KV_TOKEN.");
+  }
+  await kvPutJson(KV_USERS_KEY, users);
+}
+
 function getJwtSecret(): Uint8Array {
   const secret = (process.env.AUTH_JWT_SECRET ?? "").trim();
   if (!secret || secret.length < 32) {
-    throw new Error(
-      "AUTH_JWT_SECRET ausente ou curto (>= 32 chars). Configure no .env.local (dev) ou nas env vars do host."
-    );
+    throw new Error("AUTH_JWT_SECRET ausente ou curto (>= 32 chars).");
   }
   return new TextEncoder().encode(secret);
 }
@@ -90,18 +114,18 @@ async function verifyPassword(password: string, saltHex: string, expectedHex: st
 }
 
 export async function verifyCredentials(login: string, password: string): Promise<SessionUser | null> {
-  const users = getUsersFromEnv();
+  const users = await listUsers();
   const u = users.find((x) => x.login.toLowerCase() === login.trim().toLowerCase());
   if (!u) return null;
   const ok = await verifyPassword(password, u.salt, u.hash);
-  return ok ? { login: u.login, nome: u.nome } : null;
+  return ok ? { login: u.login, nome: u.nome, role: roleOf(u) } : null;
 }
 
 // ---- Sessão (JWT em cookie HttpOnly) ----
 export const getSessionDuration = (remember: boolean) => (remember ? SESSION_LONG : SESSION_SHORT);
 
 export async function createSessionToken(user: SessionUser, expiresInSec: number): Promise<string> {
-  return new SignJWT({ sub: user.login, nome: user.nome })
+  return new SignJWT({ sub: user.login, nome: user.nome, role: user.role })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${expiresInSec}s`)
@@ -114,6 +138,7 @@ export async function verifySessionToken(token: string): Promise<SessionUser | n
     return {
       login: typeof payload.sub === "string" ? payload.sub : "",
       nome: typeof payload.nome === "string" ? payload.nome : undefined,
+      role: payload.role === "master" ? "master" : "user",
     };
   } catch {
     return null;
@@ -124,4 +149,11 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const { cookies } = await import("next/headers");
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   return token ? verifySessionToken(token) : null;
+}
+
+/** Para route handlers: extrai o usuário da request via cookie. */
+export async function getUserFromRequest(req: Request): Promise<SessionUser | null> {
+  const cookie = req.headers.get("cookie") ?? "";
+  const m = cookie.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
+  return m ? verifySessionToken(m[1]) : null;
 }
