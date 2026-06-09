@@ -21,11 +21,12 @@ export const COOKIE_NAME = "sisprime_session";
 const SESSION_SHORT = 60 * 60 * 8;        // 8h
 const SESSION_LONG = 60 * 60 * 24 * 30;   // 30 dias com "lembrar"
 
-/** Remove caracteres de controle (code < 32) que podem ser injetados ao colar
- *  a variável no painel do host (quebras de linha/tab) e invalidam o JSON. */
-function stripControlChars(s: string): string {
+/** Remove TODO espaço em branco (espaços, quebras de linha, tabs) que podem ser
+ *  injetados ao colar a variável no painel do host e invalidam/corrompem o JSON.
+ *  Seguro aqui: o JSON é compacto e nenhum valor (login/salt/hash) tem espaço. */
+function stripWhitespace(s: string): string {
   let out = "";
-  for (const ch of s) if (ch.charCodeAt(0) >= 32) out += ch;
+  for (const ch of s) if (ch.charCodeAt(0) > 32) out += ch;
   return out;
 }
 
@@ -33,7 +34,7 @@ function getUsersFromEnv(): StoredUser[] {
   const raw = process.env.AUTH_USERS_JSON;
   if (!raw) return [];
   try {
-    const parsed = JSON.parse(stripControlChars(raw));
+    const parsed = JSON.parse(stripWhitespace(raw));
     return Array.isArray(parsed) ? (parsed as StoredUser[]) : [];
   } catch {
     return [];

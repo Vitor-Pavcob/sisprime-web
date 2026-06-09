@@ -4,15 +4,15 @@ import { NextResponse } from "next/server";
 // chegaram ao runtime. Remover após resolver o deploy.
 export const runtime = "edge";
 
-function stripControlChars(s: string): string {
+function stripWhitespace(s: string): string {
   let out = "";
-  for (const ch of s) if (ch.charCodeAt(0) >= 32) out += ch;
+  for (const ch of s) if (ch.charCodeAt(0) > 32) out += ch;
   return out;
 }
 
 export async function GET() {
   const raw = process.env.AUTH_USERS_JSON ?? "";
-  const cleaned = stripControlChars(raw);
+  const cleaned = stripWhitespace(raw);
   let users: Array<{ login?: string }> = [];
   let jsonValid = false;
   let parseError: string | null = null;
