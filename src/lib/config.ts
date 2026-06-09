@@ -18,3 +18,12 @@ export const PROPOSTA_STATUS_VALIDOS = new Set(["Aceita", "Aguardando contraprop
  * de honorários/HO) e "Não informado" ficam de fora.
  */
 export const CONTAB_TIPOS_VALIDOS = new Set(["Judicial", "Extrajudicial"]);
+
+/**
+ * Situação do processo, derivada da fase (tab_fase.descricao). Usada no filtro
+ * das telas de Ações Ativas/Passivas:
+ *   - Em andamento        → tudo que não está encerrado nem cancelado/devolvido
+ *   - Encerrados          → fase começa com "ENCERRAD"
+ *   - Cancelados/Devolvidos → fase começa com "CANCEL" / "DEVOLV" / "BAIXAD"
+ */
+export const SITUACOES = ["Em andamento", "Encerrados", "Cancelados/Devolvidos"] as const;

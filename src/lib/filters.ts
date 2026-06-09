@@ -19,6 +19,7 @@ export type Filters = {
   fases: string[];
   comarcas: string[];
   acoes: string[];
+  situacoes: string[]; // Em andamento | Encerrados | Cancelados/Devolvidos
   de: string | null;   // 'YYYY-MM-DD'
   ate: string | null;  // 'YYYY-MM-DD'
   // drill (chart-only)
@@ -52,6 +53,7 @@ export function parseFilters(sp: RawParams, grupos: number[] = [10, 21]): Filter
     fases: csv(sp.fases),
     comarcas: csv(sp.comarcas),
     acoes: csv(sp.acoes),
+    situacoes: csv(sp.situacoes),
     de: isYmd(one(sp.de)) ? one(sp.de) : null,
     ate: isYmd(one(sp.ate)) ? one(sp.ate) : null,
     ano,
@@ -66,6 +68,22 @@ function lit(v: string): string {
 
 function inList(vals: string[]): string {
   return vals.map(lit).join(", ");
+}
+
+// Classificação por fase (tab_fase.descricao). Encerrado e cancelado/devolvido
+// são reconhecidos por prefixo; "em andamento" é o complemento (inclui fase nula).
+const ENCERRADO_LIKE = "fa2.descricao LIKE 'ENCERRAD%'";
+const CANCEL_LIKE =
+  "(fa2.descricao LIKE 'CANCEL%' OR fa2.descricao LIKE 'DEVOLV%' OR fa2.descricao LIKE 'BAIXAD%')";
+const faseSub = (cond: string) => `p.fase IN (SELECT codigo FROM tab_fase fa2 WHERE ${cond})`;
+
+/** Predicado SQL para uma situação derivada da fase, ou null se desconhecida. */
+function situacaoPredicate(sit: string): string | null {
+  if (sit === "Encerrados") return faseSub(ENCERRADO_LIKE);
+  if (sit === "Cancelados/Devolvidos") return faseSub(CANCEL_LIKE);
+  if (sit === "Em andamento")
+    return `(p.fase IS NULL OR ${faseSub(`NOT (${ENCERRADO_LIKE}) AND NOT ${CANCEL_LIKE}`)})`;
+  return null;
 }
 
 /**
@@ -83,6 +101,10 @@ export function buildWhere(f: Filters): string {
     );
   if (f.acoes.length)
     parts.push(`p.acao IN (SELECT sigla FROM tab_acao WHERE descricao IN (${inList(f.acoes)}))`);
+  if (f.situacoes.length) {
+    const preds = f.situacoes.map(situacaoPredicate).filter(Boolean) as string[];
+    if (preds.length) parts.push(`(${preds.join(" OR ")})`);
+  }
   if (f.de) parts.push(`p.entrada >= ${lit(f.de)}`);
   if (f.ate) parts.push(`p.entrada < DATE_ADD(${lit(f.ate)}, INTERVAL 1 DAY)`);
   return parts.length ? " AND " + parts.join(" AND ") : "";

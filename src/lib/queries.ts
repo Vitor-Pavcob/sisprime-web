@@ -11,13 +11,13 @@
  * filtro-base. O gráfico de evolução (qEvolucao) ainda aplica o drill ano/mês.
  */
 import { buildWhere, drillLevel, type Filters } from "./filters";
-import { ANO_MIN } from "./config";
 
 // Filtro-base reaproveitado por todas as queries. `p` = alias de cad_processo.
 // grupos: [10]=ativas, [21]=passivas, [10,21]=ambos (definido pela rota).
-// Janela global: processos ajuizados (entrada) de ANO_MIN em diante.
+// Base completa do CPJ (sem piso de ano) — o recorte por período/situação fica
+// a cargo dos filtros. O piso de 2025 segue valendo só p/ propostas/contab.
 const baseG = (grupos: number[]) =>
-  `p.grupo_trabalho IN (${grupos.join(", ")}) AND p.incidente = 0 AND p.entrada >= '${ANO_MIN}-01-01'`;
+  `p.grupo_trabalho IN (${grupos.join(", ")}) AND p.incidente = 0`;
 
 const W = (f: Filters) => baseG(f.grupos) + buildWhere(f);
 

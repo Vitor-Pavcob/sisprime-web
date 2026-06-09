@@ -29,6 +29,7 @@ import { FiltersBar } from "@/components/FiltersBar";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { fmtBRL, fmtNum, fmtPct } from "@/lib/format";
+import { SITUACOES } from "@/lib/config";
 
 const num = (v: unknown) => Number(v ?? 0);
 
@@ -59,6 +60,9 @@ const ComarcaIcon = (
 );
 const AcaoIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4" /><circle cx="12" cy="12" r="9" /></svg>
+);
+const SituacaoIcon = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
 );
 
 export async function ProcessosScreen({
@@ -218,7 +222,8 @@ export async function ProcessosScreen({
 
   const toolbar = (
     <Suspense fallback={null}>
-      <FiltersBar paramKeys={["fases", "comarcas", "acoes", "de", "ate"]}>
+      <FiltersBar paramKeys={["situacoes", "fases", "comarcas", "acoes", "de", "ate"]}>
+        <MultiSelectFilter paramKey="situacoes" allLabel="Todas as situações" singularHint="situação" pluralHint="situações" options={[...SITUACOES]} icon={SituacaoIcon} />
         <MultiSelectFilter paramKey="fases" allLabel="Todas as fases" singularHint="fase" pluralHint="fases" options={optFases} icon={FaseIcon} />
         <MultiSelectFilter paramKey="comarcas" allLabel="Todas as comarcas" singularHint="comarca" pluralHint="comarcas" options={optComarcas} icon={ComarcaIcon} />
         <MultiSelectFilter paramKey="acoes" allLabel="Todos os tipos de ação" singularHint="tipo de ação" pluralHint="tipos de ação" options={optAcoes} icon={AcaoIcon} />
