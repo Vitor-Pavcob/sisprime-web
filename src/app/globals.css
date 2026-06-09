@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === SISPRIME — paleta azul institucional ===================================
+   Adaptado do estilo pavcob-web: mesma estrutura de tokens, trocando o
+   vermelho/coral quente por azul Sisprime (frio, institucional).
+   ============================================================================ */
+
+/* === LIGHT MODE (default) === */
+:root {
+  --canvas: #eef3f8;             /* azul-cinza claro e frio */
+  --canvas-tint: #e1eaf4;        /* mais saturado pros radial glows */
+  --card: #ffffff;
+  --card-soft: #f4f8fc;          /* tabela header e bg sutil */
+  --card-strong: #e9f1f9;        /* divisores e seções com mais peso */
+  --content: #0f1b2d;            /* texto principal (navy quase-preto) */
+  --content-muted: #54657c;      /* texto secundário */
+  --content-subtle: #8595a8;     /* texto terciário/labels */
+  --line: #dce5ef;               /* bordas */
+  --line-strong: #c4d3e3;
+
+  --chart-grid: #dce5ef;
+  --chart-axis: #8595a8;
+  --chart-line: #64748b;          /* linha de valor (cinza) — distinta do azul das barras */
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: #dce5ef;
+
+  --header-bg-from: #082b4a;     /* navy Sisprime */
+  --header-bg-to: #0a3b66;
+
+  /* Escala de estágios/intensidade — azul (claro → forte) no light mode */
+  --stage-1: #0a2e52;
+  --stage-2: #0e5fac;
+  --stage-3: #1e88e5;
+  --stage-4: #5eb3f2;
+
+  /* Heatmap (matrizes) e linha forte de chart */
+  --heatmap-blue: #0e5fac;
+  --heatmap-red: #b91c1c;
+  --chart-line-strong: #0f1b2d;
+
+  /* BarCells (barras de fundo nas tabelas) — light mode usa tons fortes */
+  --bar-blue: #0e5fac;
+  --bar-navy: #082b4a;
+  --bar-cyan: #00a0df;
+  --bar-emerald: #047857;
+  --bar-amber: #b45309;
+  --bar-red: #b91c1c;
+  --bar-gray: #475569;
+}
+
+/* === DARK MODE === */
+.dark {
+  --canvas: #0a1622;             /* deep navy */
+  --canvas-tint: #0f2235;
+  --card: #11202f;              /* card navy — emerge do bg */
+  --card-soft: #16293a;
+  --card-strong: #1d3346;
+  --content: #eaf2fb;           /* cool white */
+  --content-muted: #9fb3c8;
+  --content-subtle: #6f8298;
+  --line: #1d3346;
+  --line-strong: #2a4459;
+
+  --chart-grid: #1d3346;
+  --chart-axis: #6f8298;
+  --chart-line: #cbd5e1;          /* linha clara (cinza) — contrasta com o azul das barras no dark */
+  --chart-tooltip-bg: #16293a;
+  --chart-tooltip-border: #2a4459;
+
+  --header-bg-from: #050f1a;
+  --header-bg-to: #0a1622;
+
+  /* Estágios — versões mais claras pra contrastar com bg escuro */
+  --stage-1: #3b82f6;
+  --stage-2: #4aa3f0;
+  --stage-3: #60a5fa;
+  --stage-4: #93c5fd;
+
+  --heatmap-blue: #60a5fa;
+  --heatmap-red: #f87171;
+  --chart-line-strong: #eaf2fb;
+
+  /* BarCells em dark — tons mais claros pra emergir do bg navy */
+  --bar-blue: #4aa3f0;
+  --bar-navy: #cdddf2;
+  --bar-cyan: #38bdf8;
+  --bar-emerald: #34d399;
+  --bar-amber: #fbbf24;
+  --bar-red: #f87171;
+  --bar-gray: #94a3b8;
+}
+
+html, body { height: 100%; }
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body {
+  background:
+    radial-gradient(1100px 600px at 100% -10%, rgba(30, 136, 229, 0.12), transparent 60%),
+    radial-gradient(800px 400px at -10% 110%, rgba(8, 43, 74, 0.08), transparent 60%),
+    var(--canvas);
+  background-attachment: fixed;
+  color: var(--content);
+  font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  transition: background-color 200ms ease;
+}
+
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+.brand-header {
+  background:
+    radial-gradient(800px 200px at 90% -50%, rgba(30, 136, 229, 0.22), transparent 70%),
+    linear-gradient(180deg, var(--header-bg-from) 0%, var(--header-bg-to) 100%);
+}
+
+/* Em fullscreen o sidebar se esconde (reaparece no hover da borda) — então o
+   conteúdo ocupa a largura toda, sem o recuo do rail. */
+:fullscreen .shell-content { padding-left: 0; }

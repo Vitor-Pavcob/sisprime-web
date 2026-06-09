@@ -1,0 +1,33 @@
+{
+  "name": "sisprime-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "pages:build": "npx @cloudflare/next-on-pages@1",
+    "auth:bootstrap": "node scripts/auth-bootstrap.mjs",
+    "load:propostas": "python scripts/load-propostas.py",
+    "load:contabilizacoes": "python scripts/load-contabilizacoes.py"
+  },
+  "dependencies": {
+    "jose": "^6.2.3",
+    "next": "15.1.6",
+    "next-themes": "^0.4.6",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "recharts": "2.15.0"
+  },
+  "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.12",
+    "@types/node": "22.10.5",
+    "@types/react": "19.0.7",
+    "@types/react-dom": "19.0.3",
+    "autoprefixer": "10.4.20",
+    "postcss": "8.5.1",
+    "tailwindcss": "3.4.17",
+    "typescript": "5.7.3"
+  }
+}

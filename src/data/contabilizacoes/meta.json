@@ -1,0 +1,128 @@
+{
+  "generatedAt": "2026-06-09 10:54:32",
+  "totalContabilizacoes": 153,
+  "valorTotal": 11873108.97,
+  "arquivos": [
+    {
+      "arquivo": "01.25.xlsx",
+      "competencia": "2025-01",
+      "linhas": 2
+    },
+    {
+      "arquivo": "01.26.xlsx",
+      "competencia": "2026-01",
+      "linhas": 2
+    },
+    {
+      "arquivo": "02.25.xlsx",
+      "competencia": "2025-02",
+      "linhas": 10
+    },
+    {
+      "arquivo": "02.26.xlsx",
+      "competencia": "2026-02",
+      "linhas": 8
+    },
+    {
+      "arquivo": "03.25.xlsx",
+      "competencia": "2025-03",
+      "linhas": 8
+    },
+    {
+      "arquivo": "03.26.xlsx",
+      "competencia": "2026-03",
+      "linhas": 9
+    },
+    {
+      "arquivo": "04.25.xlsx",
+      "competencia": "2025-04",
+      "linhas": 9
+    },
+    {
+      "arquivo": "04.26.xlsx",
+      "competencia": "2026-04",
+      "linhas": 2
+    },
+    {
+      "arquivo": "05.25.xlsx",
+      "competencia": "2025-05",
+      "linhas": 12
+    },
+    {
+      "arquivo": "05.26.xlsx",
+      "competencia": "2026-05",
+      "linhas": 7
+    },
+    {
+      "arquivo": "06.24.xlsx",
+      "competencia": "2024-06",
+      "linhas": 5
+    },
+    {
+      "arquivo": "06.25.xlsx",
+      "competencia": "2025-06",
+      "linhas": 5
+    },
+    {
+      "arquivo": "07.24.xlsx",
+      "competencia": "2024-07",
+      "linhas": 4
+    },
+    {
+      "arquivo": "07.25.xlsx",
+      "competencia": "2025-07",
+      "linhas": 5
+    },
+    {
+      "arquivo": "08.24.xlsx",
+      "competencia": "2024-08",
+      "linhas": 14
+    },
+    {
+      "arquivo": "08.25.xlsx",
+      "competencia": "2025-08",
+      "linhas": 3
+    },
+    {
+      "arquivo": "09.24.xlsx",
+      "competencia": "2024-09",
+      "linhas": 0
+    },
+    {
+      "arquivo": "09.25.xlsx",
+      "competencia": "2025-09",
+      "linhas": 9
+    },
+    {
+      "arquivo": "10.24.xlsx",
+      "competencia": "2024-10",
+      "linhas": 7
+    },
+    {
+      "arquivo": "10.25.xlsx",
+      "competencia": "2025-10",
+      "linhas": 5
+    },
+    {
+      "arquivo": "11.24.xlsx",
+      "competencia": "2024-11",
+      "linhas": 9
+    },
+    {
+      "arquivo": "11.25.xlsx",
+      "competencia": "2025-11",
+      "linhas": 5
+    },
+    {
+      "arquivo": "12.24.xlsx",
+      "competencia": "2024-12",
+      "linhas": 11
+    },
+    {
+      "arquivo": "12.25.xlsx",
+      "competencia": "2025-12",
+      "linhas": 2
+    }
+  ],
+  "fonte": "\\\\Srvad02.pedrivasco.local\\publico$\\VITOR CASSIMIRO\\SISPRIME\\CONTABILIZACOES"
+}

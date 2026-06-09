@@ -1,0 +1,33 @@
+node_modules/
+.next/
+out/
+.env.local
+.env*.local
+.vercel
+*.log
+logs/
+.DS_Store
+
+# Estado local do agente Claude Code
+.claude/
+
+# Arquivos auxiliares de debug/setup que podem conter secrets
+auth-vars-temp.txt
+auth-vars.txt
+auth.txt
+
+# Scripts de inspeção/teste pessoal (não pertencem ao repo)
+scripts/_*.py
+scripts/_*.mjs
+scripts/_*.js
+
+# Build artifact do TypeScript — gerado automaticamente
+tsconfig.tsbuildinfo
+
+# Material de referência local (xlsx fonte, screenshots) — pesa 19MB e
+# não é necessário no repo. Comente se preferir versionar.
+reference/
+
+# Relatórios xlsx fonte (com senha) — não comitar
+Reunião - *.xlsx
+Reuniao - *.xlsx
