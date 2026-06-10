@@ -47,6 +47,23 @@ function BarTooltip({ active, payload, label }: any) {
   );
 }
 
+// Rótulo só no ponto FINAL de cada linha do comparativo (valor acumulado do
+// ano), em vez de rotular os 12 meses. Renderizado via LabelList → recebe
+// x/y/value/index de cada ponto; só desenha quando index === último mês com dado.
+function buildEndLabel(color: string, lastMonth: number) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return function EndLabel(props: any) {
+    const { x, y, value, index } = props ?? {};
+    if (index !== lastMonth || value == null) return null;
+    if (typeof x !== "number" || typeof y !== "number") return null;
+    return (
+      <text x={x} y={y - 9} textAnchor="middle" style={{ fontSize: 10.5, fontWeight: 700, fill: color, paintOrder: "stroke", stroke: "var(--card)", strokeWidth: 3 }}>
+        {brl(typeof value === "number" ? value : 0)}
+      </text>
+    );
+  };
+}
+
 function Segmented({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
   return (
     <div className="inline-flex rounded-lg border border-line-strong bg-card p-0.5 shadow-sm">
@@ -218,7 +235,7 @@ export function EvolucaoResultadoChart({ data }: { data: MatrizAno[] }) {
       {mode === "comparativo" && (
         <div className="h-[340px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={compData} margin={{ top: 16, right: 16, bottom: 4, left: 8 }}>
+            <ComposedChart data={compData} margin={{ top: 24, right: 30, bottom: 4, left: 8 }}>
               <defs>
                 {selSorted.map((ano) => (
                   <linearGradient key={ano} id={`cmpY${ano}`} x1="0" y1="0" x2="0" y2="1">
@@ -247,7 +264,9 @@ export function EvolucaoResultadoChart({ data }: { data: MatrizAno[] }) {
               {selSorted.map((ano) => (
                 <Line key={`l-${ano}`} type="monotone" dataKey={String(ano)} name={String(ano)} stroke={colorFor(ano)}
                   strokeWidth={ano === anoDestaque ? 3 : 2} dot={{ r: 2, strokeWidth: 0, fill: colorFor(ano) }} activeDot={{ r: 5 }} connectNulls={false}
-                  isAnimationActive animationBegin={0} animationDuration={800} animationEasing="ease" />
+                  isAnimationActive animationBegin={0} animationDuration={800} animationEasing="ease">
+                  <LabelList content={buildEndLabel(colorFor(ano), lastIdx[ano])} />
+                </Line>
               ))}
             </ComposedChart>
           </ResponsiveContainer>
