@@ -98,15 +98,15 @@ export const qPorAcao = (f: Filters) => `
   LIMIT 12
 `;
 
-/** Distribuição por comarca (com UF). */
+/** Distribuição por comarca/juízo (com UF). Fonte = cad_processo.juizo → tab_juizo. */
 export const qPorComarca = (f: Filters) => `
   SELECT
-    COALESCE(NULLIF(c.descricao, ''), 'Não informada') AS comarca,
-    COALESCE(NULLIF(c.estado, ''), '—')                AS uf,
+    COALESCE(NULLIF(j.descricao, ''), 'Não informada') AS comarca,
+    COALESCE(NULLIF(j.estado, ''), '—')                AS uf,
     COUNT(*)                     AS processos,
     ROUND(SUM(p.valor_causa), 2) AS valor
   FROM cad_processo p
-  LEFT JOIN z_tabela_comarca c ON c.id_comarca = p.z_comarca
+  LEFT JOIN tab_juizo j ON j.sigla = p.juizo
   WHERE ${W(f)}
   GROUP BY comarca, uf
   ORDER BY processos DESC
@@ -156,12 +156,12 @@ export const qTopProcessos = (f: Filters) => `
     COALESCE(NULLIF(pa.nome, ''), '—') AS autor,
     COALESCE(NULLIF(pr.nome, ''), '—') AS reu,
     COALESCE(NULLIF(fa.descricao, ''), '—') AS fase,
-    COALESCE(NULLIF(c.descricao, ''), '—') AS comarca,
+    COALESCE(NULLIF(j.descricao, ''), '—') AS comarca,
     CASE p.grupo_trabalho WHEN 10 THEN 'Ativa' ELSE 'Passiva' END AS tipo,
     ROUND(p.valor_causa, 2) AS valor
   FROM cad_processo p
   LEFT JOIN tab_fase fa         ON fa.codigo = p.fase
-  LEFT JOIN z_tabela_comarca c  ON c.id_comarca = p.z_comarca
+  LEFT JOIN tab_juizo j         ON j.sigla = p.juizo
   LEFT JOIN cad_pessoa pa       ON pa.codigo = p.primeiro_autor
   LEFT JOIN cad_pessoa pr       ON pr.codigo = p.primeiro_reu
   WHERE ${W(f)} AND p.valor_causa > 0
@@ -223,9 +223,9 @@ export const qOpcoesFases = (grupos: number[]) => `
 `;
 
 export const qOpcoesComarcas = (grupos: number[]) => `
-  SELECT DISTINCT c.descricao AS v
-  FROM cad_processo p JOIN z_tabela_comarca c ON c.id_comarca = p.z_comarca
-  WHERE ${baseG(grupos)} AND c.descricao IS NOT NULL AND c.descricao <> ''
+  SELECT DISTINCT j.descricao AS v
+  FROM cad_processo p JOIN tab_juizo j ON j.sigla = p.juizo
+  WHERE ${baseG(grupos)} AND j.descricao IS NOT NULL AND j.descricao <> ''
   ORDER BY 1
 `;
 

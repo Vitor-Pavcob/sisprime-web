@@ -3,7 +3,7 @@
  *
  * Filtros (multi-seleção, afetam TODA a página):
  *   - fases      → tab_fase.descricao
- *   - comarcas   → z_tabela_comarca.descricao
+ *   - comarcas   → tab_juizo.descricao (via cad_processo.juizo)
  *   - acoes      → tab_acao.descricao
  *   - de / ate   → período de ajuizamento (cad_processo.entrada)
  *
@@ -106,7 +106,7 @@ export function buildWhere(f: Filters): string {
     parts.push(`p.fase IN (SELECT codigo FROM tab_fase WHERE descricao IN (${inList(f.fases)}))`);
   if (f.comarcas.length)
     parts.push(
-      `p.z_comarca IN (SELECT id_comarca FROM z_tabela_comarca WHERE descricao IN (${inList(f.comarcas)}))`
+      `p.juizo IN (SELECT sigla FROM tab_juizo WHERE descricao IN (${inList(f.comarcas)}))`
     );
   if (f.acoes.length)
     parts.push(`p.acao IN (SELECT sigla FROM tab_acao WHERE descricao IN (${inList(f.acoes)}))`);
