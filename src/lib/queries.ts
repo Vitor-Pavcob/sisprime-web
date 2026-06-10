@@ -110,7 +110,6 @@ export const qPorComarca = (f: Filters) => `
   WHERE ${W(f)}
   GROUP BY comarca, uf
   ORDER BY processos DESC
-  LIMIT 12
 `;
 
 /**

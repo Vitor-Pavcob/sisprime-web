@@ -158,15 +158,25 @@ export async function ProcessosScreen({
     sortValues: [r.acao, num(r.processos), num(r.valor)],
   }));
 
-  // ---- Tabela: por comarca ----
-  const maxComProc = Math.max(...porComarca.map((r) => num(r.processos)), 1);
+  // ---- Tabela: por comarca/juízo ----
+  // Mostra os 12 maiores juízos; a cauda longa vai no rodapé como "Outros" +
+  // "Total", pra a tabela fechar com o total de processos do recorte.
+  const COM_TOP = 12;
+  const comTop = porComarca.slice(0, COM_TOP);
+  const comResto = porComarca.slice(COM_TOP);
+  const comRestoProc = comResto.reduce((s, r) => s + num(r.processos), 0);
+  const comRestoValor = comResto.reduce((s, r) => s + num(r.valor), 0);
+  const totalComProc = porComarca.reduce((s, r) => s + num(r.processos), 0);
+  const totalComValor = porComarca.reduce((s, r) => s + num(r.valor), 0);
+  const comarcaSubtitle = `${porComarca.length} juízos no total${comResto.length ? ` · top ${COM_TOP} no quadro, resto em "Outros"` : ""}`;
+  const maxComProc = Math.max(...comTop.map((r) => num(r.processos)), 1);
   const comarcaColumns: SortableColumn[] = [
-    { key: "comarca", header: "Comarca", align: "left" },
+    { key: "comarca", header: "Comarca/Juízo", align: "left" },
     { key: "uf", header: "UF", align: "center" },
     { key: "processos", header: "Processos", align: "right" },
     { key: "valor", header: "Valor de causa", align: "right" },
   ];
-  const comarcaRows: SortableRow[] = porComarca.map((r) => ({
+  const comarcaRows: SortableRow[] = comTop.map((r) => ({
     id: r.comarca + r.uf,
     cells: [
       <td key="c" className="px-3 py-2 font-medium text-content">{r.comarca}</td>,
@@ -176,6 +186,24 @@ export async function ProcessosScreen({
     ],
     sortValues: [r.comarca, r.uf, num(r.processos), num(r.valor)],
   }));
+  const comarcaFooter = (
+    <>
+      {comResto.length > 0 && (
+        <tr className="border-t border-line-strong">
+          <td className="px-3 py-2 font-medium italic text-content-muted">Outros ({comResto.length} juízos)</td>
+          <td className="px-3 py-2 text-center text-content-muted">—</td>
+          <td className="px-3 py-2 text-right tabular-nums text-content-muted">{fmtNum(comRestoProc)}</td>
+          <td className="px-3 py-2 text-right tabular-nums text-content-muted">{fmtBRL(comRestoValor)}</td>
+        </tr>
+      )}
+      <tr className="border-t border-line-strong bg-card-soft/40">
+        <td className="px-3 py-2 font-semibold text-content">Total</td>
+        <td className="px-3 py-2 text-center text-content-muted">—</td>
+        <td className="px-3 py-2 text-right font-semibold tabular-nums text-content">{fmtNum(totalComProc)}</td>
+        <td className="px-3 py-2 text-right font-semibold tabular-nums text-content">{fmtBRL(totalComValor)}</td>
+      </tr>
+    </>
+  );
 
   // ---- Tabela: top processos ----
   const contraHeader = active === "ativas" ? "Réu (devedor)" : "Autor (parte contrária)";
@@ -265,7 +293,7 @@ export async function ProcessosScreen({
           <SortableCard title="Por tipo de ação" subtitle="Top 12" columns={acaoColumns} rows={acaoRows} initialSort={{ key: "processos", dir: "desc" }} />
         </Exportable>
         <Exportable id="por-comarca" label={`Por comarca · ${ladoLabel}s`} className="block">
-          <SortableCard title="Por comarca" subtitle="Top 12 · concentração no Paraná" columns={comarcaColumns} rows={comarcaRows} initialSort={{ key: "processos", dir: "desc" }} />
+          <SortableCard title="Por comarca" subtitle={comarcaSubtitle} columns={comarcaColumns} rows={comarcaRows} footer={comarcaFooter} initialSort={{ key: "processos", dir: "desc" }} />
         </Exportable>
       </section>
 
