@@ -27,3 +27,11 @@ export const CONTAB_TIPOS_VALIDOS = new Set(["Judicial", "Extrajudicial"]);
  *   - Cancelados/Devolvidos → fase começa com "CANCEL" / "DEVOLV" / "BAIXAD"
  */
 export const SITUACOES = ["Em andamento", "Encerrados", "Cancelados/Devolvidos"] as const;
+
+/**
+ * Classificação do processo quanto à via de cobrança:
+ *   - Judicial      → ajuizado (tem nº de processo CNJ)
+ *   - Extrajudicial → cobrança extrajudicial / aguardando ajuizamento (sem nº)
+ * Selecionar os dois (ou nenhum) = "ambas" (sem filtro).
+ */
+export const CLASSIFICACOES = ["Extrajudicial", "Judicial"] as const;

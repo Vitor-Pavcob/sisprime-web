@@ -10,7 +10,7 @@
  * Todas as queries de dados recebem `Filters` e aplicam buildWhere(f) sobre o
  * filtro-base. O gráfico de evolução (qEvolucao) ainda aplica o drill ano/mês.
  */
-import { buildWhere, drillLevel, type Filters } from "./filters";
+import { buildWhere, drillLevel, JUDICIAL_EXPR, type Filters } from "./filters";
 
 // Filtro-base reaproveitado por todas as queries. `p` = alias de cad_processo.
 // grupos: [10]=ativas, [21]=passivas, [10,21]=ambos (definido pela rota).
@@ -169,14 +169,8 @@ export const qTopProcessos = (f: Filters) => `
   LIMIT 15
 `;
 
-// ---------------------------------------------------------------------------
-// Classificação EXTRAJUDICIAL × JUDICIAL
-// judicial = processo ajuizado (tem nº CNJ). extrajudicial = cobrança
-// extrajudicial / aguardando ajuizamento (sem nº de processo). Alinha ~99% com
-// o tipo de ação e evita a pegadinha do "execução de título extrajudicial".
-// ---------------------------------------------------------------------------
-export const JUDICIAL_EXPR =
-  "(p.numero_processo IS NOT NULL AND TRIM(p.numero_processo) NOT IN ('', '0') AND LENGTH(TRIM(p.numero_processo)) >= 10)";
+// Classificação EXTRAJUDICIAL × JUDICIAL: `JUDICIAL_EXPR` mora em filters.ts
+// (reaproveitado pelo filtro de classificação).
 
 /** Dos processos ENCERRADOS, split extrajudicial × judicial. */
 export const qEncerradosClasse = (f: Filters) => `

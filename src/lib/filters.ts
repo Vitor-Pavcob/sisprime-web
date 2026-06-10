@@ -19,7 +19,8 @@ export type Filters = {
   fases: string[];
   comarcas: string[];
   acoes: string[];
-  situacoes: string[]; // Em andamento | Encerrados | Cancelados/Devolvidos
+  situacoes: string[];      // Em andamento | Encerrados | Cancelados/Devolvidos
+  classificacoes: string[]; // Extrajudicial | Judicial ([] ou ambos = todas)
   de: string | null;   // 'YYYY-MM-DD'
   ate: string | null;  // 'YYYY-MM-DD'
   // drill (chart-only)
@@ -54,6 +55,7 @@ export function parseFilters(sp: RawParams, grupos: number[] = [10, 21]): Filter
     comarcas: csv(sp.comarcas),
     acoes: csv(sp.acoes),
     situacoes: csv(sp.situacoes),
+    classificacoes: csv(sp.classificacoes),
     de: isYmd(one(sp.de)) ? one(sp.de) : null,
     ate: isYmd(one(sp.ate)) ? one(sp.ate) : null,
     ano,
@@ -69,6 +71,13 @@ function lit(v: string): string {
 function inList(vals: string[]): string {
   return vals.map(lit).join(", ");
 }
+
+// Classificação JUDICIAL × EXTRAJUDICIAL: judicial = processo ajuizado (tem nº
+// CNJ). extrajudicial = cobrança extrajudicial / aguardando ajuizamento (sem nº
+// de processo). Alinha ~99% com o tipo de ação e evita a pegadinha do
+// "execução de título extrajudicial". (Reaproveitado pelas queries de mix.)
+export const JUDICIAL_EXPR =
+  "(p.numero_processo IS NOT NULL AND TRIM(p.numero_processo) NOT IN ('', '0') AND LENGTH(TRIM(p.numero_processo)) >= 10)";
 
 // Classificação por fase (tab_fase.descricao). Encerrado e cancelado/devolvido
 // são reconhecidos por prefixo; "em andamento" é o complemento (inclui fase nula).
@@ -105,6 +114,12 @@ export function buildWhere(f: Filters): string {
     const preds = f.situacoes.map(situacaoPredicate).filter(Boolean) as string[];
     if (preds.length) parts.push(`(${preds.join(" OR ")})`);
   }
+  // Classificação: só filtra quando UM dos lados está marcado. Os dois (ou
+  // nenhum) = "ambas", sem restrição.
+  const judSel = f.classificacoes.includes("Judicial");
+  const extSel = f.classificacoes.includes("Extrajudicial");
+  if (judSel && !extSel) parts.push(JUDICIAL_EXPR);
+  else if (extSel && !judSel) parts.push(`NOT ${JUDICIAL_EXPR}`);
   if (f.de) parts.push(`p.entrada >= ${lit(f.de)}`);
   if (f.ate) parts.push(`p.entrada < DATE_ADD(${lit(f.ate)}, INTERVAL 1 DAY)`);
   return parts.length ? " AND " + parts.join(" AND ") : "";
