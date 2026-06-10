@@ -1,5 +1,6 @@
 import { Sidebar } from "./Sidebar";
 import { FullscreenButton } from "./FullscreenButton";
+import { ExportPresentationButton } from "./ExportPresentationButton";
 
 /**
  * Shell de página: painel lateral (Sidebar) à esquerda + faixa de marca no topo
@@ -31,6 +32,7 @@ export function Shell({
             </span>
             <span className="hidden text-[11px] text-sky-200/60 sm:inline">· Painel Jurídico · Carteira &amp; Processos</span>
             <div className="ml-auto flex items-center gap-1">
+              <ExportPresentationButton />
               <FullscreenButton />
             </div>
           </div>

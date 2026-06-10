@@ -30,6 +30,7 @@ import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { fmtBRL, fmtNum, fmtPct } from "@/lib/format";
 import { SITUACOES } from "@/lib/config";
+import { Exportable } from "@/components/Exportable";
 
 const num = (v: unknown) => Number(v ?? 0);
 
@@ -241,17 +242,19 @@ export async function ProcessosScreen({
       )}
 
       {/* KPIs */}
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <KpiCard label={`Ações ${active === "ativas" ? "ativas" : "passivas"}`} value={fmtNum(num(kpi.processos))} accent="azure" hint="capa (sem incidentes)" />
-        <KpiCard label="Valor de causa" value={fmtBRL(valorTotal, { compact: true })} accent="emerald" hint="somatório total" />
-        <KpiCard label="Ticket médio" value={fmtBRL(ticket, { compact: true })} accent="cyan" hint="por processo" />
-        <KpiCard label="Devedores" value={fmtNum(num(dev.devedores))} accent="amber" hint="principal · CPF/CNPJ único" />
-        <KpiCard label="Avalistas" value={fmtNum(num(dev.avalistas))} accent="navy" hint="garantidores · CPF único" />
-        <KpiCard label="Encerrados" value={fmtNum(encTotal)} accent="azure" hint={`${fmtPct(encTotal / totalProc)} dos processos`} />
-      </section>
+      <Exportable id="kpis" label={`KPIs · Ações ${ladoLabel}s`} className="block">
+        <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <KpiCard label={`Ações ${active === "ativas" ? "ativas" : "passivas"}`} value={fmtNum(num(kpi.processos))} accent="azure" hint="capa (sem incidentes)" />
+          <KpiCard label="Valor de causa" value={fmtBRL(valorTotal, { compact: true })} accent="emerald" hint="somatório total" />
+          <KpiCard label="Ticket médio" value={fmtBRL(ticket, { compact: true })} accent="cyan" hint="por processo" />
+          <KpiCard label="Devedores" value={fmtNum(num(dev.devedores))} accent="amber" hint="principal · CPF/CNPJ único" />
+          <KpiCard label="Avalistas" value={fmtNum(num(dev.avalistas))} accent="navy" hint="garantidores · CPF único" />
+          <KpiCard label="Encerrados" value={fmtNum(encTotal)} accent="azure" hint={`${fmtPct(encTotal / totalProc)} dos processos`} />
+        </section>
+      </Exportable>
 
       {/* Evolução */}
-      <section className="mt-8 rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
+      <Exportable id="evolucao" label={`Evolução por ajuizamento · ${ladoLabel}s`} className="mt-8 block rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
         <h2 className="mb-1 text-lg font-semibold text-content">Evolução por ajuizamento</h2>
         <p className="mb-3 text-xs text-content-muted">
           Clique numa barra para detalhar: ano → mês → dia · barras = processos, linha = valor de causa
@@ -259,11 +262,11 @@ export async function ProcessosScreen({
         <Suspense fallback={<div className="h-[300px]" />}>
           <EvolucaoChart data={evolucao} level={level} />
         </Suspense>
-      </section>
+      </Exportable>
 
       {/* Classificação extrajudicial × judicial */}
       <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
+        <Exportable id="encerrados-classe" label={`Encerrados · extrajudicial × judicial · ${ladoLabel}s`} className="block rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
           <h2 className="mb-1 text-lg font-semibold text-content">Encerrados: extrajudicial × judicial</h2>
           <p className="mb-3 text-xs text-content-muted">Dos processos encerrados no recorte atual, quantos via extrajudicial vs. judicial (ajuizados)</p>
           <DonutChart
@@ -281,9 +284,9 @@ export async function ProcessosScreen({
               </div>
             ))}
           </div>
-        </div>
+        </Exportable>
 
-        <div className="rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
+        <Exportable id="mix-devedores" label={`Mix de devedores por classificação · ${ladoLabel}s`} className="block rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
           <h2 className="mb-1 text-lg font-semibold text-content">Mix de devedores por classificação</h2>
           <p className="mb-3 text-xs text-content-muted">Devedores (CPF/CNPJ) com processos puramente extrajudiciais, puramente judiciais, ou nas duas vias</p>
           <DonutChart
@@ -304,11 +307,11 @@ export async function ProcessosScreen({
               );
             })}
           </div>
-        </div>
+        </Exportable>
       </section>
 
       {/* Fase processual */}
-      <section className="mt-8">
+      <Exportable id="por-fase" label={`Distribuição por fase processual · ${ladoLabel}s`} className="mt-8 block">
         <SortableCard
           title="Distribuição por fase processual"
           subtitle={`${porFase.length} fases · valor de causa total ${fmtBRL(totalFaseValor, { compact: true })}`}
@@ -316,18 +319,22 @@ export async function ProcessosScreen({
           rows={faseRows}
           initialSort={{ key: "processos", dir: "desc" }}
         />
-      </section>
+      </Exportable>
 
       {/* Ação + Comarca */}
       <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SortableCard title="Por tipo de ação" subtitle="Top 12" columns={acaoColumns} rows={acaoRows} initialSort={{ key: "processos", dir: "desc" }} />
-        <SortableCard title="Por comarca" subtitle="Top 12 · concentração no Paraná" columns={comarcaColumns} rows={comarcaRows} initialSort={{ key: "processos", dir: "desc" }} />
+        <Exportable id="por-acao" label={`Por tipo de ação · ${ladoLabel}s`} className="block">
+          <SortableCard title="Por tipo de ação" subtitle="Top 12" columns={acaoColumns} rows={acaoRows} initialSort={{ key: "processos", dir: "desc" }} />
+        </Exportable>
+        <Exportable id="por-comarca" label={`Por comarca · ${ladoLabel}s`} className="block">
+          <SortableCard title="Por comarca" subtitle="Top 12 · concentração no Paraná" columns={comarcaColumns} rows={comarcaRows} initialSort={{ key: "processos", dir: "desc" }} />
+        </Exportable>
       </section>
 
       {/* Top processos */}
-      <section className="mt-8">
+      <Exportable id="top-processos" label={`Maiores processos por valor de causa · ${ladoLabel}s`} className="mt-8 block">
         <SortableCard title="Maiores processos por valor de causa" subtitle="Top 15" columns={topColumns} rows={topRows} initialSort={{ key: "valor", dir: "desc" }} />
-      </section>
+      </Exportable>
 
       <footer className="mt-10 border-t border-line pt-4 text-xs text-content-subtle">
         Fonte: CPJ Amaral · grupo de trabalho {grupos.join("/")} (Sisprime — Ações {ladoLabel}s). {totalProc} processos no recorte.

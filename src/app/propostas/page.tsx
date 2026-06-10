@@ -25,6 +25,7 @@ import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { fmtBRL, fmtNum, fmtPct } from "@/lib/format";
 import { blueAt } from "@/lib/theme";
+import { Exportable } from "@/components/Exportable";
 
 export const dynamic = "force-dynamic";
 
@@ -194,18 +195,20 @@ export default async function Page({
       active="propostas"
     >
       {/* KPIs */}
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <KpiCard label="Propostas" value={fmtNum(total)} accent="azure" hint={`${cpfs} devedores`} />
-        <KpiCard label="Valor de acordo" value={fmtBRL(sumAcordo, { compact: true })} accent="cyan" hint="proposto" />
-        <KpiCard label="Taxa de aceite" value={fmtPct(total > 0 ? aceitas / total : 0)} accent="emerald" subValue={`${fmtNum(aceitas)} aceitas`} />
-        <KpiCard label="Deságio médio" value={fmtPct(desagio(sumAcordo, sumAtualizado))} accent="amber" hint="vs. valor atualizado" />
-        <KpiCard label="Ticket médio" value={fmtBRL(ticket, { compact: true })} accent="navy" hint="por proposta" />
-        <KpiCard label="Valor atualizado" value={fmtBRL(sumAtualizado, { compact: true })} accent="azure" hint="dívida base" />
-      </section>
+      <Exportable id="kpis" label="KPIs · Propostas" className="block">
+        <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <KpiCard label="Propostas" value={fmtNum(total)} accent="azure" hint={`${cpfs} devedores`} />
+          <KpiCard label="Valor de acordo" value={fmtBRL(sumAcordo, { compact: true })} accent="cyan" hint="proposto" />
+          <KpiCard label="Taxa de aceite" value={fmtPct(total > 0 ? aceitas / total : 0)} accent="emerald" subValue={`${fmtNum(aceitas)} aceitas`} />
+          <KpiCard label="Deságio médio" value={fmtPct(desagio(sumAcordo, sumAtualizado))} accent="amber" hint="vs. valor atualizado" />
+          <KpiCard label="Ticket médio" value={fmtBRL(ticket, { compact: true })} accent="navy" hint="por proposta" />
+          <KpiCard label="Valor atualizado" value={fmtBRL(sumAtualizado, { compact: true })} accent="azure" hint="dívida base" />
+        </section>
+      </Exportable>
 
       {/* Status + evolução */}
       <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
+        <Exportable id="propostas-por-status" label="Propostas por status" className="block rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
           <h2 className="mb-1 text-lg font-semibold text-content">Propostas por status</h2>
           <p className="mb-3 text-xs text-content-muted">Distribuição do desfecho das propostas</p>
           <DonutChart
@@ -223,9 +226,9 @@ export default async function Page({
               </div>
             ))}
           </div>
-        </div>
+        </Exportable>
 
-        <div className="rounded-xl bg-card p-6 shadow-card ring-1 ring-line lg:col-span-2">
+        <Exportable id="propostas-evolucao" label="Evolução das propostas" className="block rounded-xl bg-card p-6 shadow-card ring-1 ring-line lg:col-span-2">
           <h2 className="mb-1 text-lg font-semibold text-content">Evolução das propostas</h2>
           <p className="mb-3 text-xs text-content-muted">
             Por data de envio · clique numa barra para detalhar (ano → mês → dia) · barras = propostas, linha = valor de acordo
@@ -233,12 +236,12 @@ export default async function Page({
           <Suspense fallback={<div className="h-[300px]" />}>
             <EvolucaoChart data={evolucao} level={level} countLabel="propostas" valueLabel="em valor de acordo" />
           </Suspense>
-        </div>
+        </Exportable>
       </section>
 
       {/* Carteira + Condição */}
       <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <Exportable id="propostas-por-carteira" label="Propostas por carteira" className="block lg:col-span-2">
           <SortableCard
             title="Por carteira"
             subtitle="Propostas, valor de acordo e deságio médio"
@@ -246,8 +249,8 @@ export default async function Page({
             rows={cartRows}
             initialSort={{ key: "processos", dir: "desc" }}
           />
-        </div>
-        <div className="rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
+        </Exportable>
+        <Exportable id="propostas-por-condicao" label="Propostas por condição" className="block rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
           <h2 className="mb-1 text-lg font-semibold text-content">Por condição</h2>
           <p className="mb-3 text-xs text-content-muted">À vista × parcelado</p>
           <DonutChart
@@ -265,11 +268,11 @@ export default async function Page({
               </div>
             ))}
           </div>
-        </div>
+        </Exportable>
       </section>
 
       {/* Status table */}
-      <section className="mt-8">
+      <Exportable id="propostas-resumo-status" label="Resumo por status" className="mt-8 block">
         <SortableCard
           title="Resumo por status"
           subtitle={`${total} propostas no recorte atual`}
@@ -277,10 +280,10 @@ export default async function Page({
           rows={statusRows}
           initialSort={{ key: "processos", dir: "desc" }}
         />
-      </section>
+      </Exportable>
 
       {/* Top propostas */}
-      <section className="mt-8">
+      <Exportable id="propostas-top" label="Maiores propostas por valor de acordo" className="mt-8 block">
         <SortableCard
           title="Maiores propostas por valor de acordo"
           subtitle="Top 15"
@@ -288,7 +291,7 @@ export default async function Page({
           rows={topRows}
           initialSort={{ key: "acordo", dir: "desc" }}
         />
-      </section>
+      </Exportable>
 
       <footer className="mt-10 border-t border-line pt-4 text-xs text-content-subtle">
         Fonte: abas “Resumo” de {PROPOSTAS_META.arquivos.length} planilhas em rede (\\Srvad02…\SISPRIME\PROPOSTAS).

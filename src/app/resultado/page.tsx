@@ -20,6 +20,7 @@ import {
 import { FiltersBar } from "@/components/FiltersBar";
 import { PeriodFilter } from "@/components/PeriodFilter";
 import { fmtBRL, fmtNum, fmtPct } from "@/lib/format";
+import { Exportable } from "@/components/Exportable";
 
 export const dynamic = "force-dynamic";
 
@@ -116,14 +117,16 @@ export default async function Page({
       active="resultado"
     >
       {/* Hero KPIs */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiCard label="Valor recuperado" value={fmtBRL(r.recuperado, { compact: true })} accent="emerald" hint={`${fmtNum(r.baixas)} baixas pagas`} />
-        <KpiCard label="Propostas geradas" value={fmtNum(r.propostas)} accent="azure" subValue={fmtBRL(r.valorProposto, { compact: true })} hint={`${fmtNum(r.devedores)} devedores`} />
-        <KpiCard label="Taxa de aceite" value={fmtPct(r.taxaAceite)} accent="cyan" subValue={`${fmtNum(r.aceitas)} aceitas`} />
-      </section>
+      <Exportable id="resultado-kpis" label="KPIs · Resultado" className="block">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <KpiCard label="Valor recuperado" value={fmtBRL(r.recuperado, { compact: true })} accent="emerald" hint={`${fmtNum(r.baixas)} baixas pagas`} />
+          <KpiCard label="Propostas geradas" value={fmtNum(r.propostas)} accent="azure" subValue={fmtBRL(r.valorProposto, { compact: true })} hint={`${fmtNum(r.devedores)} devedores`} />
+          <KpiCard label="Taxa de aceite" value={fmtPct(r.taxaAceite)} accent="cyan" subValue={`${fmtNum(r.aceitas)} aceitas`} />
+        </section>
+      </Exportable>
 
       {/* Funil + destaque recuperação */}
-      <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-5">
+      <Exportable id="resultado-funil" label="Funil de recuperação" className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-5">
         <div className="rounded-xl bg-card p-6 shadow-card ring-1 ring-line lg:col-span-3">
           <h2 className="mb-1 text-lg font-semibold text-content">Funil de recuperação</h2>
           <p className="mb-4 text-xs text-content-muted">Da proposta gerada à recuperação efetiva (cruzamento por CPF/CNPJ)</p>
@@ -140,21 +143,25 @@ export default async function Page({
             <div className="flex justify-between"><span className="text-sky-200/80">Recuperação direta</span><span className="font-semibold tabular-nums">{fmtBRL(r.recuperadoSemProposta, { compact: true })}</span></div>
           </div>
         </div>
-      </section>
+      </Exportable>
 
       {/* Evolução: proposto × recuperado + % + drilldown + comparativo */}
-      <section className="mt-8 rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
+      <Exportable id="resultado-evolucao" label="Evolução da recuperação" className="mt-8 block rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
         <h2 className="mb-1 text-lg font-semibold text-content">Evolução da recuperação</h2>
         <p className="mb-3 text-xs text-content-muted">Proposto × recuperado com % de conversão · clique nas barras para detalhar por mês · ou alterne para o comparativo anual acumulado</p>
         <Suspense fallback={<div className="h-[320px]" />}>
           <EvolucaoResultadoChart data={matriz} />
         </Suspense>
-      </section>
+      </Exportable>
 
       {/* Resultado por ano + Top */}
       <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SortableCard title="Resultado por ano" subtitle="Propostas geradas × valor recuperado" columns={anoColumns} rows={anoRows} initialSort={{ key: "ano", dir: "desc" }} />
-        <SortableCard title="Maiores recuperações" subtitle="Top 12 baixas no período" columns={topColumns} rows={topRows} initialSort={{ key: "valor", dir: "desc" }} />
+        <Exportable id="resultado-por-ano" label="Resultado por ano" className="block">
+          <SortableCard title="Resultado por ano" subtitle="Propostas geradas × valor recuperado" columns={anoColumns} rows={anoRows} initialSort={{ key: "ano", dir: "desc" }} />
+        </Exportable>
+        <Exportable id="resultado-top" label="Maiores recuperações" className="block">
+          <SortableCard title="Maiores recuperações" subtitle="Top 12 baixas no período" columns={topColumns} rows={topRows} initialSort={{ key: "valor", dir: "desc" }} />
+        </Exportable>
       </section>
 
       <footer className="mt-10 border-t border-line pt-4 text-xs text-content-subtle">

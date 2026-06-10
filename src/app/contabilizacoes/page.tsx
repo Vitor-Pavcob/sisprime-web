@@ -25,6 +25,7 @@ import { PeriodFilter } from "@/components/PeriodFilter";
 import { fmtBRL, fmtNum, fmtPct } from "@/lib/format";
 import { blueAt } from "@/lib/theme";
 import { ANO_MIN } from "@/lib/config";
+import { Exportable } from "@/components/Exportable";
 
 export const dynamic = "force-dynamic";
 
@@ -143,26 +144,28 @@ export default async function Page({
       active="contabilizacoes"
     >
       {/* KPIs */}
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <KpiCard label="Valor recuperado" value={fmtBRL(valorTotal, { compact: true })} accent="emerald" hint="total contabilizado" />
-        <KpiCard label="Baixas" value={fmtNum(total)} accent="azure" hint={`${cpfs} clientes`} />
-        <KpiCard label="Ticket médio" value={fmtBRL(ticket, { compact: true })} accent="cyan" hint="por baixa" />
-        <KpiCard label="Média mensal" value={fmtBRL(mediaMensal, { compact: true })} accent="navy" hint={`${meses} meses ativos`} />
-        <KpiCard label="Com proposta" value={fmtPct(pctConv)} accent="azure" subValue={fmtBRL(cross.comProposta.valor, { compact: true })} hint="cruzado por CPF" />
-        <KpiCard label="Recup. judicial" value={fmtPct(valorTotal > 0 ? (porTipo.find((t) => t.nome === "Judicial")?.valor ?? 0) / valorTotal : 0)} accent="amber" hint="do valor total" />
-      </section>
+      <Exportable id="kpis" label="KPIs · Contabilizações" className="block">
+        <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <KpiCard label="Valor recuperado" value={fmtBRL(valorTotal, { compact: true })} accent="emerald" hint="total contabilizado" />
+          <KpiCard label="Baixas" value={fmtNum(total)} accent="azure" hint={`${cpfs} clientes`} />
+          <KpiCard label="Ticket médio" value={fmtBRL(ticket, { compact: true })} accent="cyan" hint="por baixa" />
+          <KpiCard label="Média mensal" value={fmtBRL(mediaMensal, { compact: true })} accent="navy" hint={`${meses} meses ativos`} />
+          <KpiCard label="Com proposta" value={fmtPct(pctConv)} accent="azure" subValue={fmtBRL(cross.comProposta.valor, { compact: true })} hint="cruzado por CPF" />
+          <KpiCard label="Recup. judicial" value={fmtPct(valorTotal > 0 ? (porTipo.find((t) => t.nome === "Judicial")?.valor ?? 0) / valorTotal : 0)} accent="amber" hint="do valor total" />
+        </section>
+      </Exportable>
 
       {/* Timeline + tipo */}
       <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="rounded-xl bg-card p-6 shadow-card ring-1 ring-line lg:col-span-2">
+        <Exportable id="contab-timeline" label="Recuperação ao longo do tempo" className="block rounded-xl bg-card p-6 shadow-card ring-1 ring-line lg:col-span-2">
           <h2 className="mb-1 text-lg font-semibold text-content">Recuperação ao longo do tempo</h2>
           <p className="mb-3 text-xs text-content-muted">Por competência mensal · barras = recuperado no mês, linha = acumulado</p>
           <Suspense fallback={<div className="h-[300px]" />}>
             <TimelineChart data={timeline} />
           </Suspense>
-        </div>
+        </Exportable>
 
-        <div className="rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
+        <Exportable id="contab-por-tipo" label="Recuperação por tipo de acordo" className="block rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
           <h2 className="mb-1 text-lg font-semibold text-content">Por tipo de acordo</h2>
           <p className="mb-3 text-xs text-content-muted">Composição do valor recuperado</p>
           <DonutChart
@@ -181,11 +184,11 @@ export default async function Page({
               </div>
             ))}
           </div>
-        </div>
+        </Exportable>
       </section>
 
       {/* Cruzamento com propostas */}
-      <section className="mt-8 rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
+      <Exportable id="contab-cruzamento" label="Cruzamento com propostas" className="mt-8 block rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
         <div className="mb-4 flex items-baseline justify-between gap-3">
           <h2 className="text-lg font-semibold text-content">Cruzamento com propostas</h2>
           <span className="text-xs text-content-muted">Baixas casadas com a base de propostas por CPF/CNPJ</span>
@@ -199,12 +202,16 @@ export default async function Page({
           Cruzamento provisório por CPF/CNPJ. Quando subir a baixa parcela-a-parcela, dá pra casar por contrato/processo e medir
           <span className="font-medium text-content"> proposta aceita → efetivamente paga</span> e inadimplência das parcelas.
         </p>
-      </section>
+      </Exportable>
 
       {/* Tabelas */}
       <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SortableCard title="Por tipo de acordo" subtitle={`${total} baixas · ${fmtBRL(valorTotal, { compact: true })}`} columns={tipoColumns} rows={tipoRows} initialSort={{ key: "valor", dir: "desc" }} />
-        <SortableCard title="Maiores baixas" subtitle="Top 15 por valor recuperado" columns={topColumns} rows={topRows} initialSort={{ key: "valor", dir: "desc" }} />
+        <Exportable id="contab-tabela-tipo" label="Tabela · por tipo de acordo" className="block">
+          <SortableCard title="Por tipo de acordo" subtitle={`${total} baixas · ${fmtBRL(valorTotal, { compact: true })}`} columns={tipoColumns} rows={tipoRows} initialSort={{ key: "valor", dir: "desc" }} />
+        </Exportable>
+        <Exportable id="contab-maiores-baixas" label="Maiores baixas" className="block">
+          <SortableCard title="Maiores baixas" subtitle="Top 15 por valor recuperado" columns={topColumns} rows={topRows} initialSort={{ key: "valor", dir: "desc" }} />
+        </Exportable>
       </section>
 
       <footer className="mt-10 border-t border-line pt-4 text-xs text-content-subtle">
