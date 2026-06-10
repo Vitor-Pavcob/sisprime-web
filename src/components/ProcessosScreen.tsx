@@ -9,15 +9,12 @@ import {
   qPorComarca,
   qEvolucao,
   qTopProcessos,
-  qEncerradosClasse,
-  qMixCpf,
   qOpcoesFases,
   qOpcoesComarcas,
   qOpcoesAcoes,
 } from "@/lib/queries";
 import { Shell } from "@/components/Shell";
 import { KpiCard } from "@/components/KpiCard";
-import { DonutChart } from "@/components/DonutChart";
 import { BarCell } from "@/components/BarCell";
 import {
   SortableCard,
@@ -43,15 +40,6 @@ type AcaoRow = { acao: string; processos: number; valor: number };
 type ComarcaRow = { comarca: string; uf: string; processos: number; valor: number };
 type EvoRow = { bucket: string; processos: number; valor: number };
 type TopRow = { numero: string; autor: string; reu: string; fase: string; comarca: string; tipo: string; valor: number };
-type ClasseRow = { classe: string; processos: number; valor: number };
-type MixRow = { mix: string; cpfs: number };
-
-const CLASSE_COLORS: Record<string, string> = { "Judicial": "#0a2e52", "Extrajudicial": "#5eb3f2" };
-const MIX_COLORS: Record<string, string> = {
-  "Puramente judicial": "#0a2e52",
-  "Puramente extrajudicial": "#5eb3f2",
-  "Ambas": "#f59e0b",
-};
 
 const FaseIcon = (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h12" /></svg>
@@ -93,15 +81,13 @@ export async function ProcessosScreen({
   let porComarca: ComarcaRow[] = [];
   let evolucao: EvolucaoPonto[] = [];
   let topProc: TopRow[] = [];
-  let encClasse: ClasseRow[] = [];
-  let mixCpf: MixRow[] = [];
   let optFases: string[] = [];
   let optComarcas: string[] = [];
   let optAcoes: string[] = [];
   let erro: string | null = null;
 
   try {
-    const [k, d, f, a, c, e, tp, ec, mx, of, oc, oa] = await Promise.all([
+    const [k, d, f, a, c, e, tp, of, oc, oa] = await Promise.all([
       runSql<Kpi>(qKpis(filters)),
       runSql<Dev>(qDevedores(filters)),
       runSql<FaseRow>(qPorFase(filters)),
@@ -109,8 +95,6 @@ export async function ProcessosScreen({
       runSql<ComarcaRow>(qPorComarca(filters)),
       runSql<EvoRow>(qEvolucao(filters)),
       runSql<TopRow>(qTopProcessos(filters)),
-      runSql<ClasseRow>(qEncerradosClasse(filters)),
-      runSql<MixRow>(qMixCpf(filters)),
       runSql<{ v: string }>(qOpcoesFases(grupos)),
       runSql<{ v: string }>(qOpcoesComarcas(grupos)),
       runSql<{ v: string }>(qOpcoesAcoes(grupos)),
@@ -122,8 +106,6 @@ export async function ProcessosScreen({
     porComarca = c;
     evolucao = e.map((r) => ({ bucket: String(r.bucket), processos: num(r.processos), valor: num(r.valor) }));
     topProc = tp;
-    encClasse = ec;
-    mixCpf = mx;
     optFases = of.map((r) => r.v).filter(Boolean);
     optComarcas = oc.map((r) => r.v).filter(Boolean);
     optAcoes = oa.map((r) => r.v).filter(Boolean);
@@ -135,11 +117,6 @@ export async function ProcessosScreen({
   const valorTotal = num(kpi.valor_causa_total);
   const totalProc = num(kpi.processos) || 1;
   const ticket = valorTotal / totalProc;
-
-  const encTotal = encClasse.reduce((s, r) => s + num(r.processos), 0);
-  const mixTotal = mixCpf.reduce((s, r) => s + num(r.cpfs), 0);
-  const MIX_ORDER = ["Puramente judicial", "Puramente extrajudicial", "Ambas"];
-  const mixOrdered = [...mixCpf].sort((a, b) => MIX_ORDER.indexOf(a.mix) - MIX_ORDER.indexOf(b.mix));
 
   // ---- Tabela: por fase ----
   const maxFaseProc = Math.max(...porFase.map((r) => num(r.processos)), 1);
@@ -247,13 +224,12 @@ export async function ProcessosScreen({
 
       {/* KPIs */}
       <Exportable id="kpis" label={`KPIs · Ações ${ladoLabel}s`} className="block">
-        <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+        <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
           <KpiCard label={`Ações ${active === "ativas" ? "ativas" : "passivas"}`} value={fmtNum(num(kpi.processos))} accent="azure" hint="capa (sem incidentes)" />
           <KpiCard label="Valor de causa" value={fmtBRL(valorTotal, { compact: true })} accent="emerald" hint="somatório total" />
           <KpiCard label="Ticket médio" value={fmtBRL(ticket, { compact: true })} accent="cyan" hint="por processo" />
           <KpiCard label="Devedores" value={fmtNum(num(dev.devedores))} accent="amber" hint="principal · CPF/CNPJ único" />
           <KpiCard label="Avalistas" value={fmtNum(num(dev.avalistas))} accent="navy" hint="garantidores · CPF único" />
-          <KpiCard label="Encerrados" value={fmtNum(encTotal)} accent="azure" hint={`${fmtPct(encTotal / totalProc)} dos processos`} />
         </section>
       </Exportable>
 
@@ -268,51 +244,9 @@ export async function ProcessosScreen({
         </Suspense>
       </Exportable>
 
-      {/* Classificação extrajudicial × judicial */}
-      <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Exportable id="encerrados-classe" label={`Encerrados · extrajudicial × judicial · ${ladoLabel}s`} className="block rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
-          <h2 className="mb-1 text-lg font-semibold text-content">Encerrados: extrajudicial × judicial</h2>
-          <p className="mb-3 text-xs text-content-muted">Dos processos encerrados no recorte atual, quantos via extrajudicial vs. judicial (ajuizados)</p>
-          <DonutChart
-            data={encClasse.map((r) => ({ name: r.classe, value: num(r.processos), fill: CLASSE_COLORS[r.classe] ?? "#64748b" }))}
-            centerLabel="encerrados"
-            centerValue={fmtNum(encTotal)}
-            height={220}
-          />
-          <div className="mt-3 space-y-1.5">
-            {encClasse.map((r) => (
-              <div key={r.classe} className="flex items-center gap-2 text-xs">
-                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: CLASSE_COLORS[r.classe] ?? "#64748b" }} />
-                <span className="font-medium text-content">{r.classe}</span>
-                <span className="ml-auto tabular-nums text-content-muted">{fmtNum(num(r.processos))} · {fmtBRL(num(r.valor), { compact: true })}</span>
-              </div>
-            ))}
-          </div>
-        </Exportable>
-
-        <Exportable id="mix-devedores" label={`Mix de devedores por classificação · ${ladoLabel}s`} className="block rounded-xl bg-card p-6 shadow-card ring-1 ring-line">
-          <h2 className="mb-1 text-lg font-semibold text-content">Mix de devedores por classificação</h2>
-          <p className="mb-3 text-xs text-content-muted">Devedores (CPF/CNPJ) com processos puramente extrajudiciais, puramente judiciais, ou nas duas vias</p>
-          <DonutChart
-            data={mixOrdered.map((r) => ({ name: r.mix, value: num(r.cpfs), fill: MIX_COLORS[r.mix] ?? "#64748b" }))}
-            centerLabel="devedores"
-            centerValue={fmtNum(mixTotal)}
-            height={220}
-          />
-          <div className="mt-3 space-y-1.5">
-            {mixOrdered.map((r) => {
-              const pct = mixTotal > 0 ? num(r.cpfs) / mixTotal : 0;
-              return (
-                <div key={r.mix} className="flex items-center gap-2 text-xs">
-                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: MIX_COLORS[r.mix] ?? "#64748b" }} />
-                  <span className="font-medium text-content">{r.mix}</span>
-                  <span className="ml-auto tabular-nums text-content-muted">{fmtNum(num(r.cpfs))} · {fmtPct(pct)}</span>
-                </div>
-              );
-            })}
-          </div>
-        </Exportable>
-      </section>
+      {/* TODO(pós-reunião): cards "Encerrados: extrajudicial × judicial" e
+          "Mix de devedores por classificação" removidos temporariamente.
+          Restaurar via git (commit anterior) — ver memória [[processos-cards-removidos]]. */}
 
       {/* Fase processual */}
       <Exportable id="por-fase" label={`Distribuição por fase processual · ${ladoLabel}s`} className="mt-8 block">
