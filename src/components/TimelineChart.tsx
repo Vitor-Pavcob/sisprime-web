@@ -5,11 +5,14 @@ import {
   Bar,
   CartesianGrid,
   ComposedChart,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+
+const LABEL_HALO = { paintOrder: "stroke", stroke: "var(--card)", strokeWidth: 3 } as const;
 
 export type MesPonto = { competencia: string; processos: number; valor: number; acumulado: number };
 
@@ -47,10 +50,12 @@ function CustomTooltip({ active, payload }: any) {
 
 export function TimelineChart({ data }: { data: MesPonto[] }) {
   const chartData = data.map((d) => ({ ...d, label: label(d.competencia) }));
+  // Acima de ~18 meses os rótulos se sobrepõem — aí ficam só no hover.
+  const showLabels = chartData.length <= 18;
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 4 }}>
+        <ComposedChart data={chartData} margin={{ top: 20, right: 8, bottom: 4, left: 4 }}>
           <defs>
             <linearGradient id="tlBars" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="var(--bar-blue)" stopOpacity={1} />
@@ -67,7 +72,17 @@ export function TimelineChart({ data }: { data: MesPonto[] }) {
           <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "var(--chart-axis)" }} tickLine={false} axisLine={false} width={48} tickFormatter={brl} />
           <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "var(--chart-axis)" }} tickLine={false} axisLine={false} width={52} tickFormatter={brl} />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--card-strong)", opacity: 0.4 }} />
-          <Bar yAxisId="left" dataKey="valor" fill="url(#tlBars)" radius={[3, 3, 0, 0]} maxBarSize={26} />
+          <Bar yAxisId="left" dataKey="valor" fill="url(#tlBars)" radius={[3, 3, 0, 0]} maxBarSize={26}>
+            {showLabels && (
+              <LabelList
+                dataKey="valor"
+                position="top"
+                offset={6}
+                formatter={(v: number) => (v > 0 ? brl(v) : "")}
+                style={{ fontSize: 9.5, fontWeight: 600, fill: "var(--content)", ...LABEL_HALO }}
+              />
+            )}
+          </Bar>
           <Area yAxisId="right" type="monotone" dataKey="acumulado" stroke="var(--chart-line)" strokeWidth={2} fill="url(#tlLineArea)" dot={false} activeDot={{ r: 4 }} />
         </ComposedChart>
       </ResponsiveContainer>

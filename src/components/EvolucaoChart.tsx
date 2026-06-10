@@ -7,11 +7,15 @@ import {
   Bar,
   CartesianGrid,
   ComposedChart,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+
+// Estilo "halo": contorno na cor do card pra o rótulo ficar legível sobre a barra.
+const LABEL_HALO = { paintOrder: "stroke", stroke: "var(--card)", strokeWidth: 3 } as const;
 
 export type EvolucaoPonto = { bucket: string; processos: number; valor: number };
 export type DrillLevel = "ano" | "mes" | "dia";
@@ -83,6 +87,10 @@ export function EvolucaoChart({
 
   const chartData = data.map((d) => ({ ...d, label: labelFor(d.bucket, level) }));
   const clickable = level !== "dia";
+  // Rótulos de dados: contagem nas barras (cabe mais), valor na linha (mais largo).
+  // Acima do limite ficam ilegíveis (ex.: drill diário), então some.
+  const showCountLabels = chartData.length <= 24;
+  const showValorLabels = chartData.length <= 12;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function CustomTooltip({ active, payload }: any) {
@@ -127,7 +135,7 @@ export function EvolucaoChart({
 
       <div className="h-[260px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 4, left: 4 }}>
+          <ComposedChart data={chartData} margin={{ top: 20, right: 8, bottom: 4, left: 4 }}>
             <defs>
               <linearGradient id="evoBars" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="var(--bar-blue)" stopOpacity={1} />
@@ -157,8 +165,28 @@ export function EvolucaoChart({
               maxBarSize={38}
               onClick={onBarClick}
               cursor={clickable ? "pointer" : "default"}
-            />
-            <Area yAxisId="right" type="monotone" dataKey="valor" stroke="var(--chart-line)" strokeWidth={2} fill="url(#evoLineArea)" dot={{ r: 2.5, fill: "var(--chart-line)", strokeWidth: 0 }} activeDot={{ r: 4 }} />
+            >
+              {showCountLabels && (
+                <LabelList
+                  dataKey="processos"
+                  position="top"
+                  offset={6}
+                  formatter={(v: number) => (v > 0 ? v.toLocaleString("pt-BR") : "")}
+                  style={{ fontSize: 10.5, fontWeight: 700, fill: "var(--content)", ...LABEL_HALO }}
+                />
+              )}
+            </Bar>
+            <Area yAxisId="right" type="monotone" dataKey="valor" stroke="var(--chart-line)" strokeWidth={2} fill="url(#evoLineArea)" dot={{ r: 2.5, fill: "var(--chart-line)", strokeWidth: 0 }} activeDot={{ r: 4 }}>
+              {showValorLabels && (
+                <LabelList
+                  dataKey="valor"
+                  position="top"
+                  offset={10}
+                  formatter={(v: number) => (v > 0 ? fmtBRLcompact(v) : "")}
+                  style={{ fontSize: 10, fontWeight: 600, fill: "var(--chart-line)", ...LABEL_HALO }}
+                />
+              )}
+            </Area>
           </ComposedChart>
         </ResponsiveContainer>
       </div>

@@ -31,6 +31,29 @@ function renderActiveShape(props: any) {
   return <Sector {...props} outerRadius={props.outerRadius + 6} />;
 }
 
+const RAD = Math.PI / 180;
+// Rótulo de % dentro da fatia (só nas fatias ≥10% pra não poluir). Branco com
+// contorno escuro (halo) → legível tanto em fatia escura quanto clara.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function renderSliceLabel(props: any) {
+  const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+  if (!percent || percent < 0.1) return null;
+  const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + r * Math.cos(-midAngle * RAD);
+  const y = cy + r * Math.sin(-midAngle * RAD);
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor="middle"
+      dominantBaseline="central"
+      style={{ fontSize: 12, fontWeight: 700, fill: "#fff", paintOrder: "stroke", stroke: "rgba(0,0,0,0.45)", strokeWidth: 3 }}
+    >
+      {`${Math.round(percent * 100)}%`}
+    </text>
+  );
+}
+
 export function DonutChart({
   data,
   height = 220,
@@ -82,6 +105,8 @@ export function DonutChart({
             activeShape={renderActiveShape}
             onMouseEnter={(_, idx) => setActiveIndex(idx)}
             onMouseLeave={() => setActiveIndex(undefined)}
+            label={renderSliceLabel}
+            labelLine={false}
           >
             {data.map((slice) => (
               <Cell key={slice.name} fill={slice.fill} stroke="none" />
